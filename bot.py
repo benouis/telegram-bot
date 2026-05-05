@@ -8,7 +8,8 @@ from telegram import Bot
 # =========================
 # ⚙️ CONFIG
 # =========================
-TOKEN = os.getenv("TOKEN")
+# يقرأ من البيئة، وإذا غير موجود يستعمل fallback
+TOKEN = os.getenv("TOKEN") or "8145144025:AAGeHljihv0JELuJpmxCo4J18bBXMH3GeI8"
 CHAT_ID = "6291959044"
 
 bot = Bot(token=TOKEN)
@@ -29,14 +30,20 @@ def now_time():
 # =========================
 def load_state():
     if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
     return {}
 
 
 def save_state(state):
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False)
+    try:
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False)
+    except:
+        pass
 
 
 # =========================
@@ -52,12 +59,23 @@ def fetch_data():
     for _ in range(3):
         try:
             r = requests.get(URL, headers=headers, timeout=30)
-            return r.json()
-        except Exception:
+            if r.status_code == 200:
+                return r.json()
+        except:
             print("⚠️ اتصال ضعيف مع الموقع...")
             time.sleep(2)
 
     return []
+
+
+# =========================
+# 📩 SEND SAFE
+# =========================
+def send_message(text):
+    try:
+        bot.send_message(CHAT_ID, text)
+    except:
+        print("⚠️ فشل إرسال Telegram")
 
 
 # =========================
@@ -98,19 +116,16 @@ def main():
             if name in old_state and old_state[name] != status:
                 t = now_time()
 
-                try:
-                    if name == "تلمسان":
-                        if status:
-                            bot.send_message(CHAT_ID, f"🚨🚨 تلمسان فتحت\n⏰ {t}")
-                        else:
-                            bot.send_message(CHAT_ID, f"🔴 تلمسان أغلقت\n⏰ {t}")
+                if name == "تلمسان":
+                    if status:
+                        send_message(f"🚨🚨 تلمسان فتحت\n⏰ {t}")
                     else:
-                        if status:
-                            bot.send_message(CHAT_ID, f"🟢 {name} فتحت\n⏰ {t}")
-                        else:
-                            bot.send_message(CHAT_ID, f"🔴 {name} أغلقت\n⏰ {t}")
-                except Exception:
-                    print("⚠️ فشل إرسال Telegram")
+                        send_message(f"🔴 تلمسان أغلقت\n⏰ {t}")
+                else:
+                    if status:
+                        send_message(f"🟢 {name} فتحت\n⏰ {t}")
+                    else:
+                        send_message(f"🔴 {name} أغلقت\n⏰ {t}")
 
         save_state(new_state)
         old_state = new_state
