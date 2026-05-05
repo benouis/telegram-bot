@@ -4,9 +4,10 @@ import json
 import os
 from telegram import Bot
 
-# 🔴 عدّل فقط هذين
-import os
-TOKEN = os.getenv("8145144025:AAGeHljihv0JELuJpmxCo4J18bBXMH3GeI8")
+# ✅ التوكن من Railway Variables
+TOKEN = os.getenv("TOKEN")
+
+# 🔴 عدّل فقط هذا
 CHAT_ID = "6291959044"
 
 bot = Bot(token=TOKEN)
@@ -36,7 +37,7 @@ def fetch_data():
 
     for _ in range(3):
         try:
-            r = requests.get(URL, headers=headers, timeout=10, verify=False)
+            r = requests.get(URL, headers=headers, timeout=10)
             return r.json()
         except Exception as e:
             print("ERROR:", e)
@@ -73,8 +74,9 @@ while True:
         else:
             closed_count += 1
 
-        # 🔔 تنبيه ذكي (فقط عند التغيير)
+        # 🔔 تنبيه فقط عند التغيير
         if name in old_state and old_state[name] != status:
+
             if name == "تلمسان":
                 if status:
                     bot.send_message(CHAT_ID, "🚨🚨 تلمسان فتحت الآن 🔔")
