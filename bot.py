@@ -18,10 +18,10 @@ STATE_FILE = "state.json"
 
 
 # =========================
-# ⏱️ TIME (دقة عالية)
+# ⏱️ TIME (ثواني فقط)
 # =========================
 def now_time():
-    return datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    return datetime.now().strftime("%H:%M:%S")
 
 
 # =========================
@@ -51,17 +51,17 @@ def fetch_data():
 
     for _ in range(3):
         try:
-            r = requests.get(URL, headers=headers, timeout=15)
+            r = requests.get(URL, headers=headers, timeout=30)
             return r.json()
         except Exception:
-            print("⚠️ اتصال ضعيف...")
+            print("⚠️ اتصال ضعيف مع الموقع...")
             time.sleep(2)
 
     return []
 
 
 # =========================
-# 🚀 MAIN LOOP (Railway compatible)
+# 🚀 MAIN LOOP
 # =========================
 def main():
     old_state = load_state()
@@ -94,7 +94,7 @@ def main():
             else:
                 closed_count += 1
 
-            # 🔔 إشعار عند التغيير
+            # 🔔 إشعار عند التغيير فقط
             if name in old_state and old_state[name] != status:
                 t = now_time()
 
