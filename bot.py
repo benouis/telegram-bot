@@ -14,7 +14,6 @@ URL = "https://adhahi.dz/api/v1/public/wilaya-quotas"
 STATE_FILE = "state.json"
 
 
-# تحميل الحالة السابقة
 def load_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -22,13 +21,11 @@ def load_state():
     return {}
 
 
-# حفظ الحالة
 def save_state(state):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False)
 
 
-# جلب البيانات مع retry
 def fetch_data():
     headers = {
         "User-Agent": "Mozilla/5.0",
@@ -38,7 +35,7 @@ def fetch_data():
 
     for _ in range(3):
         try:
-            r = requests.get(URL, headers=headers, timeout=10)
+            r = requests.get(URL, headers=headers, timeout=10, verify=False)
             return r.json()
         except Exception as e:
             print("ERROR:", e)
@@ -47,19 +44,17 @@ def fetch_data():
     return []
 
 
-# البرنامج الرئيسي
 old_state = load_state()
 
 while True:
     data = fetch_data()
 
     if not data:
-        print("⚠️ لم يتم جلب البيانات")
+        print("⚠️ فشل جلب البيانات")
         time.sleep(10)
         continue
 
     new_state = {}
-
     open_count = 0
     closed_count = 0
 
@@ -78,21 +73,18 @@ while True:
             closed_count += 1
 
         # 🔔 تنبيه ذكي (فقط عند التغيير)
-        if name in old_state:
-            if old_state[name] != status:
-
-                if name == "تلمسان":
-                    if status:
-                        bot.send_message(CHAT_ID, "🚨🚨 تلمسان فتحت الآن 🔔")
-                    else:
-                        bot.send_message(CHAT_ID, "🔴 تلمسان أغلقت")
+        if name in old_state and old_state[name] != status:
+            if name == "تلمسان":
+                if status:
+                    bot.send_message(CHAT_ID, "🚨🚨 تلمسان فتحت الآن 🔔")
                 else:
-                    if status:
-                        bot.send_message(CHAT_ID, f"🟢 {name} فتحت")
-                    else:
-                        bot.send_message(CHAT_ID, f"🔴 {name} أغلقت")
+                    bot.send_message(CHAT_ID, "🔴 تلمسان أغلقت")
+            else:
+                if status:
+                    bot.send_message(CHAT_ID, f"🟢 {name} فتحت")
+                else:
+                    bot.send_message(CHAT_ID, f"🔴 {name} أغلقت")
 
-    # حفظ الحالة
     save_state(new_state)
     old_state = new_state
 
